@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { createServer } = require('http');
 const { socketController } = require('../sockets/sockets.controller');
+const { dbConnection } = require('../database/config');
 
 class Server {
     constructor() {
@@ -15,29 +16,25 @@ class Server {
             usuarios:   '/api/usuarios'
         }
 
+        this.connectToDB();
 
-        // Middlewares
         this.middlewares();
 
-        // Rutas de mi aplicación
         this.routes();
 
-        // Sockets
         this.sockets();
     }
 
+    async connectToDB() {
+        await dbConnection();
+    }
 
     middlewares() {
-
-        // CORS
         this.app.use( cors() );
 
-        // Lectura y parseo del body
         this.app.use( express.json() );
 
-        // Directorio Público
         this.app.use( express.static('public') );
-
     }
 
     routes() {
