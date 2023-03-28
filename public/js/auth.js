@@ -3,7 +3,7 @@ const login    = document.querySelector('#login')
 
 const url = ( window.location.hostname.includes('localhost'))
             ? 'http://localhost:8080/api/'
-            : 'https://restserver-curso-fher.herokuapp.com/api/auth/';
+            : 'https://socketchat-cangrena-production.up.railway.app/api/';
 
 register.addEventListener('submit', ev => {
     ev.preventDefault();
