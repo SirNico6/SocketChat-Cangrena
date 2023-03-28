@@ -12,29 +12,33 @@ const ulUsuarios = document.querySelector('#ulUsuarios');
 const ulMensajes = document.querySelector('#ulMensajes');
 const btnSalir   = document.querySelector('#btnSalir');
 
+
+
 // Validar el token del localstorage
-const validarJWT = async() => {
-    const token = localStorage.getItem('token') || '';
+// const validarJWT = async() => {
 
-    if ( token.length <= 10 ) {
-        window.location = 'index.html';
-        alert("No hay token che, te logeaste?");
-        throw new Error('No hay token en el servidor');
-    }
-    const resp = await fetch( url, {
-        headers: { 'x-token': token }
-    }).then(resp => resp.json())
-    .then(({ user: userDB, token: tokenDB }) =>{
-    localStorage.setItem('token', tokenDB );
-    usuario = userDB;
-    document.title = usuario.name;
-    });
+//     const token = localStorage.getItem('token') || '';
 
+//     if ( token.length <= 10 ) {
+//         window.location = 'index.html';
+//         throw new Error('No hay token en el servidor');
+//     }
 
-    await conectarSocket();
-}
+//     const resp = await fetch( url, {
+//         headers: { 'x-token': token }
+//     });
+
+//     const { usuario: userDB, token: tokenDB } = await resp.json();
+//     localStorage.setItem('token', tokenDB );
+//     usuario = userDB;
+//     document.title = usuario.nombre;
+
+//     await conectarSocket();
+    
+// }
 
 const conectarSocket = async() => {
+    
     socket = io({
         'extraHeaders': {
             'x-token': localStorage.getItem('token')
@@ -49,59 +53,78 @@ const conectarSocket = async() => {
         console.log('Sockets offline')
     });
 
-    socket.on('receive-messages', dibujarMensajes );
-    socket.on('active-users', dibujarUsuarios );
+    socket.on('recibir-mensajes', dibujarMensajes );
+    socket.on('usuarios-activos', dibujarUsuarios );
 
-    socket.on('private-message', ( payload ) => {
+    socket.on('mensaje-privado', ( payload ) => {
         console.log('Privado:', payload )
     });
+
+
 }
 
 const dibujarUsuarios = ( usuarios = []) => {
+
     let usersHtml = '';
-    usuarios.forEach( ({ name, uid }) => {
+    usuarios.forEach( ({ nombre, uid }) => {
 
         usersHtml += `
             <li>
                 <p>
-                    <h5 class="text-success"> ${ name } </h5>
+                    <h5 class="text-success"> ${ nombre } </h5>
                     <span class="fs-6 text-muted">${ uid }</span>
                 </p>
             </li>
         `;
     });
+
     ulUsuarios.innerHTML = usersHtml;
+
 }
 
 const dibujarMensajes = ( mensajes = []) => {
+
     let mensajesHTML = '';
-    mensajes.forEach( ({ name, message }) => {
+    mensajes.forEach( ({ nombre, mensaje }) => {
 
         mensajesHTML += `
             <li>
                 <p>
-                    <span class="text-primary">${ name }: </span>
-                    <span>${ message }</span>
+                    <span class="text-primary">${ nombre }: </span>
+                    <span>${ mensaje }</span>
                 </p>
             </li>
         `;
     });
+
     ulMensajes.innerHTML = mensajesHTML;
+
 }
 
 txtMensaje.addEventListener('keyup', ({ keyCode }) => {
-    const message = txtMensaje.value;
+    
+    const mensaje = txtMensaje.value;
     const uid     = txtUid.value;
+
     if( keyCode !== 13 ){ return; }
-    if( message.length === 0 ){ return; }
-    socket.emit('send-message', { message, uid });
+    if( mensaje.length === 0 ){ return; }
+
+    socket.emit('enviar-mensaje', { mensaje, uid });
+
     txtMensaje.value = '';
-    txtUid.value = '';
-});
+
+})
+
 
 btnSalir.addEventListener('click', ()=> {
+
     localStorage.removeItem('token');
-    window.location = 'index.html';
+
+    const auth2 = gapi.auth2.getAuthInstance();
+    auth2.signOut().then( () => {
+        console.log('User signed out.');
+        window.location = 'index.html';
+    });
 });
 
 const main = async() => {
@@ -109,4 +132,11 @@ const main = async() => {
     await validarJWT();
 }
 
-main();
+(()=>{
+    gapi.load('auth2', () => {
+        gapi.auth2.init();
+        main();
+    });
+})();
+
+// main();

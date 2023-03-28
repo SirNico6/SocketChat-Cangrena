@@ -6,14 +6,14 @@ const { dbConnection } = require('../database/config');
 
 class Server {
     constructor() {
-        this.app  = express();
-        this.port = process.env.PORT || 3000;
+        this.app    = express();
+        this.port   = process.env.PORT || 3000;
         this.server = createServer( this.app );
         this.io     = require('socket.io')(this.server)
 
         this.paths = {
-            auth:       '/api/auth',
-            usuarios:   '/api/usuarios'
+            auth : '/api/auth',
+            users: '/api/users'
         }
 
         this.connectToDB();
@@ -38,7 +38,8 @@ class Server {
     }
 
     routes() {
-        
+        this.app.use(this.paths.auth, require('../routes/auth.routes'));
+        this.app.use(this.paths.users, require('../routes/user.routes'));
     }
 
 
@@ -48,7 +49,7 @@ class Server {
 
     listen() {
         this.server.listen( this.port, () => {
-            console.log('Servidor corriendo en puerto', this.port );
+            console.log('Server listening on port: ', this.port );
         });
     }
 
